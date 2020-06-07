@@ -1,0 +1,353 @@
+* Два канала
+** Сигнатура
+- должна принимать три канала:
+  - функцию ~f~;
+  - вход 1;
+  - вход 2;
+  - выход, куда будет происходить вывод
+  - n число повторения итераций
+** Функционал
+Функция должны сделать n раз следующее:
+- прочитать по одному числу из каждого из двух каналов in1 и in2, например x1 и x2;
+- вычислить вычислить f(x1) + f(x2);
+- записать полученное значение в output;
+
+Функция должна быть неблокирующей
+Функция f может работать долгое время. Что из этого следует?
+** Примечание
+Судя по всему числа в память будут литься рекой, но считывание из stdin'a должно быть неблокирующим. Т.е. числа должны тупо добавляться в очередь в канал
+** Вопросы
+В: функция f может работать долгое время. К чему это? Что это значит?
+О: значит, что она блокирующая. Более того, она может *ЖДАТЬ* что-то, следовательно пока она ждёт вторая функция может ждать параллельно
+
+В: в задаче написано что действия нужно совершить n раз. Поэтому есть два варианта выполнения функции:
+- каждый цикл должен совершать запись в ~out~, и только после этого должен начаться новый цикл;
+- все задачи внутри цикла могут выполняться параллельно. Цикл просто создаст горутины с задачами;
+** Болталка
+*** Постановка задачи
+**** День первый
+- возможные цели:
+  - эффективное выполнение работы с минимальным простоем;
+  - уложиться во время выполнения;
+  - уложиться в память выполнения;
+  - сохранять очередность поставленных задач;
+
+Выводы:
+- управление вызовом функции ~Merge2Channels~ может производиться с помощью записи в out
+- первое что нужно сделать, это выполнение функции f в отдельных горутинах
+  #+begin_comment
+  Делаю предположение, т.к. в задании сказано, что функции ~f~ *БЛОКИРУЮЩИЕ* => могут выполняться параллельно.
+  Также предполагаю, что новый вызов функции ~Merge2Channels~ не происходит, пока в ~out~ что-то не запишется.
+  #+end_comment
+Сделать:
+*Возможно* нужно обернуть только ~f~, так как это именно они являются блокирующими.
+- [X] на локальной машине написать такую функцию f, чтобы она ждала какое-то время;
+- [X] добиться выполнения функций f параллельно, чтобы в этом убедиться надо засечь время;
+- [X] продумать и попробовать:
+  - [X] выполнение функции без оборачивания её в ~go func~;
+  - [X] два способа выполнения:
+    - [X] цикл отправляет записи в out последовательно;
+    - [X] цикл сразу создает все горутинами;
+- [X] подумать над select'ом
+**** День третий
+- [ ] написать нагрузочные тесты
+Возможные ошибки:
+- считано слишком много
+- считано слишком мало
+- неправильный ответ
+
+Какую полезную информацию я могу получить из логов:
+- 
+
+Первый вызов функции завершился удачно. Второй вероятно тоже, но при вызове третьего начались проблемы. Почему?
+третий цикл запускает слишком много горутин? и что?
+**** День пятый
+- [ ] написать тест; должен удовлетворять следующим условиям:
+  - [ ] запускаться минимум дважды в цикле, с передачей уникальных заполненных каналов len(100) == cap(100);
+  - [ ] n - 30
+  - [ ] в функции ~f~ должна быть рандомная задержка, но результат должен быть известен заранее, чтобы сравнить его на вызоде
+
+Получается так, что все работает правильно. Все условия выполняются. Но ускользает какая-то мелочь. 
+Какая? 
+Сто раз говорили очередь
+Долгий результат тоже возвращает WA, значит сработало бы и так
+нужно пройти хотя бы первый тест
+что я могу сделать чтобы пройти первый тест. неверный результат. нужны любые идеи даже бредовые
+
+
+
+- очередь
+- взаимная блокировка
+- блокировка вызова второй функции до проверки первой. Например не снимать mutex
+- 
+*** Из книги
+- надо n раз считать
+- n раз отправить
+- когда отправлять?
+- передавать значения в горутины как аргумент, а не брать из общего контекста;
+- счетчик sync.WaitGroup
+** Про каналы
+- каналами можно управлять через каналы
+- циклы можно именовать
+- есть штука ~select~
+** Документы
+- [X] паспорт:
+  - [X] прописка;
+  - [X] воинская обязанность;
+  - [X] семейное положение;
+  - [X] дети;
+  - [X] сведения о ранее выданных паспортах;
+- [ ] военный билет:
+  - [ ] страница с записью (первая, наверно);
+  - [ ] последняя страница (+ выписное?);
+- [X] ИНН
+- [X] СНИЛС
+- [ ] С работа
+  - [ ] трудовая
+  - [ ] справка 182н
+* Тестирование
+#+begin_src shell
+  go test -cpuprofile cpu.prof -memprofile mem.prof -bench .  # профилирование тестов
+  go tool pprof mem.pprof executable_name
+  потом top или web
+  go tool pprof -pdf test.test mem.prof > cpuprofile.pdf  # генерация pdf с результатами профилирования
+  go tool pprof mem.prof  # открытие cli где можно выбрать формат вывода
+#+end_src
+* Проработка чита
+** Список файлов
+[2020-05-27 Ср]
+#+begin_comment
+- 20124255-6bd0-4990-b5de-3d9e9c92dcf6
+- Makefile
+- build.sh
+- c94b65b9-1055-47ce-81b5-01d494210664
+- compilingScript
+- d4029e65-d4cd-4802-9449-cc660a3092e4_err
+- d4029e65-d4cd-4802-9449-cc660a3092e4_out
+- executingScript
+- main_test.go
+- participantSolution.go
+- run.sh
+- см формат ввода
+- см формат вывода
+#+end_comment
+
+Код для чтения списка файлов:
+[2020-05-27 Ср]
+#+begin_src go
+		files, err := ioutil.ReadDir(".")
+		if err != nil {
+			panic("error reading directory")
+		}
+
+		for _, f := range files {
+			fmt.Fprintln(os.Stderr, f.Name())
+		}
+#+end_src
+Чтение содержимого всего файла и вывод в stderr
+#+begin_src go
+  file, err := os.Open("test.txt")
+  if err != nil {
+    panic("error reading file")
+  }
+  defer file.Close()
+
+  b, err := ioutil.ReadAll(file)
+  fmt.Fprintln(os.Stderr, string(b))
+#+end_src
+Чтение файла построчно
+#+begin_src go
+	file, err := os.Open("test.txt")
+	if err != nil {
+		panic("error reading file")
+	}
+	defer file.Close()
+
+	var lines []string
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	result := strings.Join(lines[4:], "\n")
+	fmt.Fprintln(os.Stderr, result)
+#+end_src
+Чтение содержимого всех файлов
+#+begin_src go
+	excluded := map[string]struct{}{
+		"Makefile":               {},
+		"build.sh":               {},
+		"compilingScript":        {},
+		"executingScript":        {},
+		"main_test.go":           {},
+		"participantSolution.go": {},
+		"run.sh":                 {},
+	}
+
+	files, _ := ioutil.ReadDir(".")
+
+	var filesToRead []string
+	for _, file := range files {
+		filename := file.Name()
+		_, ok := excluded[filename]
+		if !ok {
+			filesToRead = append(filesToRead, filename)
+		}
+	}
+
+	for _, filename := range filesToRead {
+
+		fmt.Fprintln(os.Stderr, "READING FILE:", filename)
+		file, err := os.Open(filename)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error reading file", filename)
+		}
+		defer file.Close()
+
+		var lines []string
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+		result := strings.Join(lines[:], "\n")
+		fmt.Fprintln(os.Stderr, result)
+	}
+#+end_src
+** Содержимое файлов
+[2020-05-27 Ср]
+Прочитать:
+- [X] 20124255-6bd0-4990-b5de-3d9e9c92dcf6
+- [X] Makefile
+  #+begin_src yaml
+    all: build
+
+    build:
+      /bin/sh ./build.sh
+
+    run:
+      /bin/sh ./run.sh
+
+    all: build
+
+    build:
+      /bin/sh ./build.sh
+
+    run:
+      /bin/sh ./run.sh
+  #+end_src
+- [X] build.sh:
+  #+begin_src shell
+  #!/bin/bash
+
+  OUT=participantSolution.go
+  TMP=tempNameForParticipantSolution.go
+
+  cat $filename > $TMP || exit 1
+  rm $filename
+  cat $TMP > $OUT || exit 1
+  rm $TMP
+  #+end_src
+- [X] c94b65b9-1055-47ce-81b5-01d494210664
+- [X] compilingScript:
+  #+begin_src shell
+  #!/bin/sh
+
+  extract () {
+  case $1 in
+      *.tar.bz2) tar xjf $1 ;;
+      *.tar.gz) tar xzf $1 ;;
+      *.bz2) bunzip2 $1 ;;
+      *.rar) rar x $1 ;;
+      *.gz) gunzip $1 ;;
+      *.tar) tar xf $1 ;;
+      *.tbz2) tar xjf $1 ;;
+      *.tgz) tar xzf $1 ;;
+      *.zip) unzip $1 ;;
+      *.z) uncompress $1 ;;
+      *.c)  ;;
+      *.cpp)  ;;
+      *.java)  ;;
+      *.py)  ;;
+      *) echo "'$1' cannot be extracted via extract ()" ;;
+  esac
+  }
+
+  case "$1" in
+      --compile)
+          extract "$2"
+          export filename="$2"
+          make || exit 1
+          tar pczf "$3" *
+      ;;
+      --prepare)
+          ;;
+      --execute)
+          export filename="$2"
+          tar zxf "$3"
+          make -s run
+      ;;
+  esac
+
+
+  #+end_src
+- [X] xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx_err
+  - пустой. Ошибки? Какие ошибки? мб error лог
+- [X] xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx_out
+  #+begin_src
+  '/temp/compiling/source' cannot be extracted via extract ()
+  /bin/sh ./build.sh
+  #+end_src
+  Скорее всего лог компиляции
+- [X] executingScript:
+  #+begin_src shell
+  #!/bin/sh
+
+  extract () {
+  case $1 in
+      *.tar.bz2) tar xjf $1 ;;
+      *.tar.gz) tar xzf $1 ;;
+      *.bz2) bunzip2 $1 ;;
+      *.rar) rar x $1 ;;
+      *.gz) gunzip $1 ;;
+      *.tar) tar xf $1 ;;
+      *.tbz2) tar xjf $1 ;;
+      *.tgz) tar xzf $1 ;;
+      *.zip) unzip $1 ;;
+      *.z) uncompress $1 ;;
+      *.c)  ;;
+      *.cpp)  ;;
+      *.java)  ;;
+      *.py)  ;;
+      *) echo "'$1' cannot be extracted via extract ()" ;;
+  esac
+  }
+
+  case "$1" in
+      --compile)
+          extract "$2"
+          export filename="$2"
+          make || exit 1
+          tar pczf "$3" *
+      ;;
+      --prepare)
+          ;;
+      --execute)
+          export filename="$2"
+          tar zxf "$3"
+          make -s run
+      ;;
+  esac
+  #+end_src
+- [X] main_test.go
+- [X] participantSolution.go
+- [X] run.sh:
+  #+begin_src shell
+  #!/bin/bash
+
+  go test
+  #+end_src
+- [X] см формат ввода
+  - пробел
+- [X] см формат вывода
+  - пробел

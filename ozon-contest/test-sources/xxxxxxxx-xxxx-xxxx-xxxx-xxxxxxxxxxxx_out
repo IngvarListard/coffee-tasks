@@ -1,0 +1,4 @@
+# судя по всему лог компиляции
+'/temp/compiling/source' cannot be extracted via extract ()
+/bin/sh ./build.sh
+ 
