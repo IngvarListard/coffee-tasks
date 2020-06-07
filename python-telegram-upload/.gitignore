@@ -1,0 +1,8 @@
+courses/*
+.mypy_cache
+.idea
+.vscode
+.directory
+*.db
+secret.py
+__pycache__
