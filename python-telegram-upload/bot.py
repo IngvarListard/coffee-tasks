@@ -9,6 +9,8 @@ from xml.dom.minidom import DocumentLS
 import telegram
 from telegram.ext import (CallbackContext, CommandHandler, Filters,
                           MessageHandler, Updater)
+from telegram.utils.request import Request
+from telegram.ext.dispatcher import run_async
 
 try:
     from secret import REQUEST_KWARGS, TOKEN
@@ -55,6 +57,20 @@ def exists(path, type='documents'):
     else:
         return
 
+def get_attachment_from_file(message: telegram.Message):
+    required_types = ['audio', 'game', 'animation', 'document', 'photo', 'sticker', 'video',
+                        'voice', 'video_note', 'contact', 'location', 'venue', 'invoice',
+                        'successful_payment']
+    for t in required_types:
+        obj = getattr(message, t)
+        if obj:
+            return obj, t
+
+    print("Неизвестный тип данных", message.effective_attachment(), type(message.effective_attachment()))
+    return None, None
+
+    
+
 
 def handle_document(path, parent_node_id, file_name):
     bot = Telegram.bot
@@ -68,18 +84,18 @@ def handle_document(path, parent_node_id, file_name):
             print(f'Документ "{file_name} уже загружен"')
             return
         if file_extension == '.mp3':
-            message = bot.send_audio(Telegram.chat_id, f)
+            message = bot.send_audio(Telegram.chat_id, f, timeout=120)
             create_document(
                 file_name.replace('_', ' ').capitalize(),
                 file_name,
-                message.document.file_id,
+                message.audio.file_id,
                 'audio',
                 1,
                 parent_node_id,
                 path
             )
-        elif file_extension in '.pdf':
-            message = bot.send_document(Telegram.chat_id, f)
+        elif file_extension in ['.pdf', '.txt']:
+            message = bot.send_document(Telegram.chat_id, f, timeout=120)
             create_document(
                 file_name.replace('_', ' ').capitalize(),
                 file_name,
