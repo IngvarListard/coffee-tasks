@@ -43,6 +43,11 @@ def set_priority(db):
 
         print("current priority", result[2])
         priority = float(number)
+
+        if priority % 1 != 0:
+            priority = int(number.split('.')[1])
+            # priority = int(("%0.2f" % priority).split('.')[1])
+        
         cursor.execute(sql, (priority, result[0]))
         print("PRIORITY", priority)
     db.commit()
@@ -73,8 +78,7 @@ def set_documents_priority(db):
 
 def main():
     db = sqlite3.connect('courses_bot.db')
-    delete_underscores(db)
-
+    set_priority(db)
 
 if __name__ == "__main__":
     main()
