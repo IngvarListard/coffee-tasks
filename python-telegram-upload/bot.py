@@ -135,7 +135,7 @@ def create_node(name: str, path: str, parent_id: int = None):
             name=? AND
             path=? AND
             parent_id=?;
-    """, (name, str(path), parent_id))
+    """, (name.replace('_', ' ').capitalize(), str(path), parent_id))
     r = cursor.fetchall()
     if r:
         if r > 1:
