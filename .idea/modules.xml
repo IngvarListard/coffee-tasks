@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/coffee-tasks.iml" filepath="$PROJECT_DIR$/.idea/coffee-tasks.iml" />
+      <module fileurl="file://$PROJECT_DIR$/coffee-tasks.iml" filepath="$PROJECT_DIR$/coffee-tasks.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pysort/pysort.iml" filepath="$PROJECT_DIR$/pysort/pysort.iml" />
     </modules>
   </component>
 </project>
