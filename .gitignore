@@ -1,1 +1,37 @@
 /go-binary-protocols/.idea/
+### Clojure ###
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/lib/
+/classes/
+/target/
+/checkouts/
+.lein-deps-sum
+.lein-repl-history
+.lein-plugins/
+.lein-failures
+.nrepl-port
+.cpcache/
+
+dev-config.edn
+test-config.edn
+/.lein-*
+profiles.clj
+/.env
+/node_modules
+/log
+
+# End of https://www.toptal.com/developers/gitignore/api/clojure
+
+pgdata
+node_modules
+.shadow-cljs
+resources/public/js
+resources/public/css
+.clj-kondo/.cache
+.calva
+.lsp
+
+.directory
